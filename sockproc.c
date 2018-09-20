@@ -27,7 +27,6 @@ extern int daemon(int, int);
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
-#define BUFFER_CHAIN_LINK_SIZE 16384
 #define SHELL_BIN "/bin/sh"
 #define SHELL_ARG "-c"
 
@@ -57,7 +56,7 @@ int forward(int from, int to){
 }
 
 
-int create_child(int fd, const char* cmd, char* const argv[], char* const env[], int sock)
+int create_worker(const char* cmd, char* const argv[], char* const env[], int sock)
 {
 	int stdin_pipe[2];
 	int stdout_pipe[2];
@@ -121,8 +120,7 @@ int create_child(int fd, const char* cmd, char* const argv[], char* const env[],
 		int fdset_width = MAX(sock, stdout_pipe[PIPE_READ]) + 1;
 		int selret = 0;
 
-		printf("stdout-pipe-read:%d socket-read:%d fdset-width:%d\n", stdout_pipe[PIPE_READ], sock, fdset_width);
-
+		// printf("stdout-pipe-read:%d socket-read:%d fdset-width:%d\n", stdout_pipe[PIPE_READ], sock, fdset_width);
 
 		while (1) {
 
@@ -285,7 +283,7 @@ int main(int argc, char *argv[], char *envp[])
 		}
 
 		if (fork()==0) {
-			/* child */
+			/* child, this is the supervisor process */
 			memset(buf, 0, sizeof(buf));
 			p = bc = buf; count = sizeof(buf)-1;
 			while (count > 0) {
@@ -307,7 +305,7 @@ int main(int argc, char *argv[], char *envp[])
 			child_argv[1] = SHELL_ARG;
 			child_argv[2] = buf;
 			child_argv[3] = 0;
-			create_child(cl, child_argv[0], child_argv, envp, cl);
+			create_worker(child_argv[0], child_argv, envp, cl);
 			close(cl);
 
 			exit(0);

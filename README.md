@@ -21,16 +21,11 @@ most Linux distributions, the **telnet** command is not as versatile. So we
 can employ a **socat** utility instead, using "crlf" flag to enforce the
 '\r\n' line-endings for standard input.
 
-Connect to socket and type in a command line to execute, followed
-by a line that contains the number 0:
+Connect to socket and type in a command line to execute:
 
     $ socat - /tmp/shell.sock,crlf
     uname -a
-    0
-    status:0
-    98
     Linux a569cf4d3a74 4.9.27-moby #1 SMP Thu May 11 04:01:18 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux
-    0
 
 ### With TCP socket
 
@@ -46,11 +41,7 @@ by a line that contains the number 0:
     Connected to 127.0.0.1.
     Escape character is '^]'.
     uname -a
-    0
-    status:0
-    98
     Linux a569cf4d3a74 4.9.27-moby #1 SMP Thu May 11 04:01:18 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux
-    0
     Connection closed by foreign host.
 
 Execute a bad command:
@@ -60,10 +51,6 @@ Execute a bad command:
     Connected to 127.0.0.1.
     Escape character is '^]'.
     foobar
-    0
-    status:32512
-    0
-    37
     /bin/bash: foobar: command not found
     Connection closed by foreign host.
 
@@ -75,19 +62,14 @@ The protocol is very simple, similar somewhat to HTTP:
 ### Request format:
 
     <command-line>\r\n
-    <stdin-byte-count>\r\n
-    <stdin-data>
 
 The `<command-line>` length cannot exceed 2040 characters.
 
-### Response format:
+then the socket is piped to/from the stdin/out of newly created process.
 
-    status:<process-exit-code>\r\n
-    <stdout-byte-count>\r\n
-    <stdout-data>
-    <stderr-byte-count>\r\n
-    <stderr-data>
+## Known Issues
 
+Only the stdout, stderr have been transfered back to the client - no status is returned
 
 ## License 
 The MIT License (MIT)
